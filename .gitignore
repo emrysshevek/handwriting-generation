@@ -1,0 +1,10 @@
+.idea/
+data/__pycache__/
+data/online_augmentation_new.json
+data/raw_text_10000.txt
+img.png
+models/__pycache__/
+models/hwr.pt
+slurm-31298099.out
+utils/__pycache__/
+warp-ctc/
