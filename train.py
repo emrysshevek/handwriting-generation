@@ -1,5 +1,7 @@
-import numpy as np
+import time
+import os
 
+import numpy as np
 import matplotlib.pyplot as plt
 
 import torch
@@ -12,6 +14,11 @@ from models.hwr import create_model
 from models.hw_generator import HWGenerator
 from utils.string_utils import label2str, naive_decode
 from utils.error_rates import cer
+
+name = str(time.time())
+result_dir = os.path.join('results', name)
+if not os.path.isdir(result_dir):
+    os.mkdir(result_dir)
 
 img_height = 8
 start_token = torch.zeros(img_height)
@@ -85,13 +92,15 @@ for epoch in range(n_epochs):
                 print('saving epoch best')
                 plt.imshow(images[j])
                 plt.title(gt_str)
+                plt.xticks([], [])
+                plt.yticks([], [])
                 plt.xlabel(pred_str)
-                plt.savefig(f'results/epoch_{epoch}.png')
+                plt.savefig(os.path.join(result_dir, f'epoch_{epoch}.png'))
 
             if cer_loss < overall_best:
                 overall_best = cer_loss
                 print('saving new overall best!!!!')
-                plt.savefig(f'results/best.png')
+                plt.savefig(os.path.join(result_dir, 'best.png'))
 
             print()
 
