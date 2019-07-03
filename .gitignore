@@ -8,3 +8,4 @@ models/hwr.pt
 slurm-31298099.out
 utils/__pycache__/
 warp-ctc/
+results/*

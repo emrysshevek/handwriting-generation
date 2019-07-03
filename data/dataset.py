@@ -25,8 +25,7 @@ def collate(samples):
 class BaseDataset(data.Dataset):
 
     def __init__(self):
-        # self.char_to_idx = None
-        # self.idx_to_char = None
+
         self.char_to_idx, self.idx_to_char, _ = make_char_set([train_path])
         self.n_chars = len(self.char_to_idx)
         self.data = None
@@ -49,16 +48,6 @@ class WordsDataset(BaseDataset):
         with open(path, 'r') as fp:
             self.data = fp.read().split()
 
-        # self.chars = set("".join(self.data))
-        #
-        # self.char_to_idx = {c: i+1 for i, c in enumerate(self.chars)}
-        # self.char_to_idx[start_token] = len(self.char_to_idx) + 1
-        # self.char_to_idx[end_token] = len(self.char_to_idx) + 1
-        # self.char_to_idx[unknown_token] = len(self.char_to_idx) + 1
-        # self.idx_to_char = {i: c for c, i in self.char_to_idx.items()}
-        #
-        # self.n_chars = len(self.char_to_idx)
-
     def __len__(self):
         return len(self.data)
 
@@ -69,17 +58,8 @@ class LetterDataset(BaseDataset):
         super().__init__()
 
         self.size = size
-        self.data = [''.join(['a']*i) for i in range(size)]
+        self.data = [''.join(['a']*(i+1)) for i in range(size)]
 
-        # self.chars = string.ascii_lowercase
-        #
-        # self.char_to_idx = {c: i+1 for i, c in enumerate(self.chars)}
-        # self.char_to_idx[start_token] = len(self.char_to_idx) + 1
-        # self.char_to_idx[end_token] = len(self.char_to_idx) + 1
-        # self.char_to_idx[unknown_token] = len(self.char_to_idx) + 1
-        # self.idx_to_char = {i: c for c, i in self.char_to_idx.items()}
-        #
-        # self.n_chars = len(self.char_to_idx)
 
     def __len__(self):
         return self.size

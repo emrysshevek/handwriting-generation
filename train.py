@@ -19,10 +19,10 @@ end_token = torch.zeros(img_height)
 
 device = torch.device('cpu')
 online = False
-n_epochs = 10
+n_epochs = 100000
 
-dataset = WordsDataset('data/raw_text_10000.txt')
-# dataset = LetterDataset(size=10)
+# dataset = WordsDataset('data/raw_text_10000.txt')
+dataset = LetterDataset(size=10)
 
 data_generator = DataLoader(dataset, batch_size=10, shuffle=True, collate_fn=collate)
 
@@ -39,6 +39,7 @@ hw_generator = HWGenerator(encoder, decoder, upsampler, hwr)
 
 criterion = torch.nn.CTCLoss()
 optimizer = torch.optim.Adam(params=torch.nn.ModuleList([encoder, decoder, upsampler]).parameters(), lr=0.001)
+overall_best = np.inf
 
 for epoch in range(n_epochs):
     print("---------------------------------------")
@@ -47,7 +48,7 @@ for epoch in range(n_epochs):
     sum_loss = 0.0
     steps = 0.0
     hw_generator.train()
-    lowest_cer = np.inf
+    epoch_best = np.inf
     for labels, label_lengths in data_generator:
         preds, images = hw_generator(labels, online)
         preds = preds.cpu()
@@ -63,7 +64,8 @@ for epoch in range(n_epochs):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        print("EPOCH LOSS:", loss)
+        print("BATCH LOSS:", loss)
+        print()
 
         for j in range(out.shape[0]):
             logits = out[j, ...]
@@ -78,16 +80,23 @@ for epoch in range(n_epochs):
             sum_loss += cer_loss
             steps += 1
 
-            if cer_loss < lowest_cer:
-                lowest_cer = cer_loss
-                print('saving best image!')
+            if cer_loss < epoch_best:
+                epoch_best = cer_loss
+                print('saving epoch best')
                 plt.imshow(images[j])
-                plt.savefig('img.png')
+                plt.title(gt_str)
+                plt.xlabel(pred_str)
+                plt.savefig(f'results/epoch_{epoch}.png')
+
+            if cer_loss < overall_best:
+                overall_best = cer_loss
+                print('saving new overall best!!!!')
+                plt.savefig(f'results/best.png')
 
             print()
 
     training_cer = sum_loss / steps
-    print(training_cer)
+    print("CER:", training_cer)
 
 
 
