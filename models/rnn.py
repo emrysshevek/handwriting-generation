@@ -5,7 +5,7 @@ from torch.nn import functional as F
 
 class Encoder(nn.Module):
 
-    def __init__(self, num_embeddings, embed_size, output_size, activation=F.relu, hidden_size=32, num_layers=5,
+    def __init__(self, num_embeddings, embed_size, output_size, activation=F.relu, hidden_size=300, num_layers=5,
                  dropout=0):
 
         super(Encoder, self).__init__()
