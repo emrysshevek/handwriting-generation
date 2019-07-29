@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import DataLoader
 
-from data.dataset import WordsDataset, LetterDataset, collate
+from data.text_dataset import WordsDataset, LetterDataset, collate
 from models.rnn import Encoder, Decoder
 from models.upsample import Upsampler
 from models.hwr import create_model
