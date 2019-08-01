@@ -1,4 +1,4 @@
-import time
+import datetime
 import os
 import argparse
 
@@ -13,19 +13,20 @@ from data.hw_dataset import HWDataset, collate
 from models.cnn import CNN
 from models.upsample import Upsampler
 
+if torch.cuda.is_available():
+    print('Using GPU\n')
+    device = torch.device('cuda')
+else:
+    print('GPU unavailable\n')
+    device = torch.device('cpu')
 
-def run_epoch(model, loader, loss_fct, optimizer):
+
+def run_epoch(model, loader, loss_fct, optimizer, epoch, name):
     losses = []
     min_loss = np.inf
     best_img = None
-    for i, x in enumerate(loader):
-        # f, axarr = plt.subplots(len(x), 1)
-        # for j, x in enumerate(x):
-        #     img = x.squeeze().detach().numpy()
-        #     print(img)
-        #     axarr[j].imshow(img, cmap='gray')
-        # plt.show()
-        # break
+    for i, gt in enumerate(loader):
+        x = gt.to(device)
 
         print(f'batch {i}: ', end='', flush=True)
         encoding = model[0](x)
@@ -45,43 +46,71 @@ def run_epoch(model, loader, loss_fct, optimizer):
         loss.backward()
         optimizer.step()
 
-        loss = loss.detach().item()
+        loss = loss.detach().cpu().item()
         print(loss)
         losses.append(loss)
         if loss < min_loss:
             min_loss = loss
-            best_img = output[0].squeeze().detach().numpy()
-            gt_img = x[0].squeeze().detach().numpy()
+            best_img = output[0].squeeze().detach().cpu().numpy()
+            gt_img = gt[0].squeeze().detach().numpy()
             f, axarr = plt.subplots(2, 1)
             axarr[0].imshow(best_img, cmap='gray')
             axarr[1].imshow(gt_img, cmap='gray')
-            plt.show()
+            f.suptitle(f'Batch {i}')
+
+            if not os.path.exists(f'{name}/epoch_{epoch}'):
+                os.mkdir(f'{name}/epoch_{epoch}')
+            plt.savefig(f'{name}/epoch_{epoch}/batch_{i}.png')
+            plt.close()
 
     return np.mean(losses), best_img
 
 
-def train(model, loader, loss_fct, optimizer):
+def train(model, loader, loss_fct, optimizer, name):
+    if not os.path.exists(f'{name}/best'):
+        os.mkdir(f'{name}/best')
+
+    losses = []
     model.train()
-    for i in range(10):
-        print(f'Epoch {i}:', end='', flush=True)
+    for i in range(1000):
+        print('------------------------------------------')
+        print(f'EPOCH {i}', flush=True)
 
-        loss, img = run_epoch(model, loader, loss_fct, optimizer)
+        loss, img = run_epoch(model, loader, loss_fct, optimizer, i, name)
+        losses.append(loss)
         print(f'Epoch {i} loss: {loss}')
+        print('------------------------------------------')
 
+        plt.figure()
         plt.imshow(img, cmap='gray')
+        plt.imsave(f'{name}/best/epoch_{i}.png', img, cmap='gray')
+
+        plt.figure()
+        plt.plot(losses)
+        plt.title('Loss')
+        plt.savefig(f'{name}/loss.png')
+        plt.show()
 
 
 def main():
+    experiment = 'sigmoid_activation'
     dataset = HWDataset(dir='data/hw_images')
-    loader = DataLoader(dataset, batch_size=8, collate_fn=collate, shuffle=True)
+    loader = DataLoader(dataset, batch_size=16, collate_fn=collate, shuffle=True)
 
     encoder = CNN()
     decoder = Upsampler()
-    model = nn.ModuleList([encoder, decoder])
+    model = nn.ModuleList([encoder, decoder]).to(device)
     loss_fct = nn.MSELoss()
-    optimizer = torch.optim.Adam(params=model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(params=model.parameters(), lr=0.002)
 
-    train(model, loader, loss_fct, optimizer)
+    name = 'results/encoding'
+    if not os.path.exists(name):
+        os.mkdir(name)
+    name = f'{name}/{experiment}_{datetime.datetime.now()}'
+    if not os.path.exists(name):
+        os.mkdir(name)
+
+    train(model, loader, loss_fct, optimizer, name)
 
 
 
