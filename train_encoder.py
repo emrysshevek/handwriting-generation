@@ -26,6 +26,8 @@ def run_epoch(model, loader, loss_fct, optimizer, epoch, name):
     min_loss = np.inf
     best_img = None
     for i, gt in enumerate(loader):
+        assert gt.shape[-1] % 8 == 0
+
         x = gt.to(device)
 
         print(f'batch {i}: ', end='', flush=True)
@@ -33,6 +35,7 @@ def run_epoch(model, loader, loss_fct, optimizer, epoch, name):
         output = model[1](encoding)
 
         shape_diff = output.shape[-1] - x.shape[-1]
+        assert shape_diff == 0
         left_diff = int(np.ceil(np.abs(shape_diff)/2))
         right_diff = int(np.floor(np.abs(shape_diff)/2))
         if shape_diff > 0:
@@ -60,7 +63,7 @@ def run_epoch(model, loader, loss_fct, optimizer, epoch, name):
 
             if not os.path.exists(f'{name}/epoch_{epoch}'):
                 os.mkdir(f'{name}/epoch_{epoch}')
-            plt.savefig(f'{name}/epoch_{epoch}/batch_{i}.png')
+            plt.savefig(f'{name}/epoch_{epoch}/batch_{i}.png', dpi=300)
             plt.close()
 
     return np.mean(losses), best_img
@@ -84,16 +87,18 @@ def train(model, loader, loss_fct, optimizer, name):
         plt.figure()
         plt.imshow(img, cmap='gray')
         plt.imsave(f'{name}/best/epoch_{i}.png', img, cmap='gray')
+        plt.close()
 
         plt.figure()
         plt.plot(losses)
         plt.title('Loss')
         plt.savefig(f'{name}/loss.png')
         plt.show()
+        plt.close()
 
 
 def main():
-    experiment = 'sigmoid_activation'
+    experiment = 'sig_times_two'
     dataset = HWDataset(dir='data/hw_images')
     loader = DataLoader(dataset, batch_size=16, collate_fn=collate, shuffle=True)
 
@@ -111,7 +116,6 @@ def main():
         os.mkdir(name)
 
     train(model, loader, loss_fct, optimizer, name)
-
 
 
 if __name__ == "__main__":

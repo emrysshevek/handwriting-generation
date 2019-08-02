@@ -12,9 +12,9 @@ class CNN(nn.Module):
         super(CNN, self).__init__()
 
         self.pool = nn.MaxPool2d(2)
-        self.conv1 = nn.Conv2d(1, 6, 3, padding=2)
-        self.conv2 = nn.Conv2d(6, 6, 3, padding=2)
-        self.conv3 = nn.Conv2d(6, 1, 3, padding=1)
+        self.conv1 = nn.Conv2d(1, 6, 3, padding=(2, 1))
+        self.conv2 = nn.Conv2d(6, 6, 3, padding=(2, 1))
+        self.conv3 = nn.Conv2d(6, 1, 3, padding=(1, 1))
         self.hidden_act = F.relu
         self.output_act = torch.sigmoid
 
